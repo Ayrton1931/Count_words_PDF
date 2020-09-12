@@ -1,0 +1,74 @@
+"""
+Created on Sat Sep 12 16:11:00 2020
+
+@author: Shadow
+"""
+#### Import files in GUI
+from tkinter import *
+from tkinter import ttk
+from tkinter import filedialog
+from tkinter import Menu
+from nltk.tokenize import casual_tokenize
+import nltk
+from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
+from pdfminer.layout import LAParams
+from pdfminer.converter import TextConverter
+from io import StringIO
+from pdfminer.pdfpage import PDFPage
+import os
+
+import PyPDF2
+from PyPDF2 import PdfFileReader, PdfFileWriter
+import re
+
+import sys
+
+def get_pdf_file_content(self):
+    self.resource_manager = PDFResourceManager(caching=True)
+    self.out_text = StringIO()
+    self.laParams = LAParams()
+    self.text_converter = TextConverter(self.resource_manager, self.out_text, laparams=self.laParams)
+    self.fp = open(self.filename, 'rb')
+    self.interpreter = PDFPageInterpreter(self.resource_manager, self.text_converter)
+    for page in PDFPage.get_pages(self.fp, pagenos=set(), maxpages=0, password="",
+                                  caching=True, check_extractable=True):
+        interpreter.process_page(page)    
+    self.text = self.out_text.getvalue()
+    self.fp.close()
+    self.text_converter.close()
+    self.out_text.close()
+    return self.text
+    
+def count_words(self): 
+    self.text_extracted = self.get_pdf_file_content(self.filename)
+    # tokenizer
+    self.tokens_extracted= casual_tokenize(self.text_extracted, reduce_len=True, strip_handles=True)
+    # Stopwords 
+    nltk.download('stopwords') ### Canonical stop-words
+    self.stop_words = nltk.corpus.stopwords.words('english') 
+    self.tokens_extracted = [x.lower() for x in self.tokens_extracted]
+    self.tokens_without_stopwords = [x for x in self.tokens_extracted if x not in self.stop_words]
+    self.tokens_without_stopwords = [x for x in self.tokens_without_stopwords if len(x)>1 ]
+        
+# Function for count words
+def word_count(self):
+    self.counts = dict()
+    self.words = self
+    for word in self.words:
+        if word in self.counts:
+            self.counts[word] += 1
+        else:
+            self.counts[word] = 1
+    return self.counts
+    
+def export_words_count(self):
+    # Dictionary with words counted
+    self.count_words_extracted = self.word_count(self.tokens_without_stopwords)
+    # From dictionary to DataFrame
+    self.df = pd.DataFrame.from_dict(self.count_words_extracted, orient='index')
+    self.df = self.df.sort_values([0], ascending = (False))
+    self.df = self.df.reset_index()
+    self.df.columns=["Words", "Repetition"]
+    # Export to csv file
+    self.filename
+    self.df.to_csv(os.path.join( r"D:\Taxation", r"count_words.csv" ))
