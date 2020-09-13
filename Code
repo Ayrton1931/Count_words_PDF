@@ -3,7 +3,7 @@ Created on Sat Sep 12 16:11:00 2020
 
 @author: Shadow
 """
-#### Import files in GUI
+import pandas as pd
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
@@ -23,52 +23,55 @@ import re
 
 import sys
 
-def get_pdf_file_content(self):
-    self.resource_manager = PDFResourceManager(caching=True)
-    self.out_text = StringIO()
-    self.laParams = LAParams()
-    self.text_converter = TextConverter(self.resource_manager, self.out_text, laparams=self.laParams)
-    self.fp = open(self.filename, 'rb')
-    self.interpreter = PDFPageInterpreter(self.resource_manager, self.text_converter)
-    for page in PDFPage.get_pages(self.fp, pagenos=set(), maxpages=0, password="",
+
+
+#### The folder where are the documents
+folder_doc = r"D:\education-job mismatching"
+document_name = r"An Alternative Approach to Search Frictions.pdf"
+## Define document path
+file_path = os.path.join(folder_doc, document_name)
+
+#### A Function:
+def Count_Words(x):
+    #From PDF to Text. 
+    resource_manager = PDFResourceManager(caching=True)
+    out_text = StringIO()
+    laParams = LAParams()
+    text_converter = TextConverter(resource_manager, out_text, laparams=laParams)
+    fp = open( x , 'rb')
+    interpreter = PDFPageInterpreter(resource_manager, text_converter)
+    for page in PDFPage.get_pages(fp, pagenos=set(), maxpages=0, password="",
                                   caching=True, check_extractable=True):
         interpreter.process_page(page)    
-    self.text = self.out_text.getvalue()
-    self.fp.close()
-    self.text_converter.close()
-    self.out_text.close()
-    return self.text
-    
-def count_words(self): 
-    self.text_extracted = self.get_pdf_file_content(self.filename)
+    text = out_text.getvalue()
+    fp.close()
+    text_converter.close()
+    out_text.close()       
     # tokenizer
-    self.tokens_extracted= casual_tokenize(self.text_extracted, reduce_len=True, strip_handles=True)
-    # Stopwords 
+    tokens_extracted= casual_tokenize(text, reduce_len=True, strip_handles=True)
     nltk.download('stopwords') ### Canonical stop-words
-    self.stop_words = nltk.corpus.stopwords.words('english') 
-    self.tokens_extracted = [x.lower() for x in self.tokens_extracted]
-    self.tokens_without_stopwords = [x for x in self.tokens_extracted if x not in self.stop_words]
-    self.tokens_without_stopwords = [x for x in self.tokens_without_stopwords if len(x)>1 ]
-        
-# Function for count words
-def word_count(self):
-    self.counts = dict()
-    self.words = self
-    for word in self.words:
-        if word in self.counts:
-            self.counts[word] += 1
+    stop_words = nltk.corpus.stopwords.words('english') 
+    tokens_extracted = [x.lower() for x in tokens_extracted]
+    tokens_without_stopwords = [x for x in tokens_extracted if x not in stop_words]
+    tokens_without_stopwords = [x for x in tokens_without_stopwords if len(x)>1 ]    
+    # Count Words
+    counts = dict()
+    words = tokens_without_stopwords
+    for word in words:
+        if word in counts:
+            counts[word] += 1
         else:
-            self.counts[word] = 1
-    return self.counts
-    
-def export_words_count(self):
-    # Dictionary with words counted
-    self.count_words_extracted = self.word_count(self.tokens_without_stopwords)
-    # From dictionary to DataFrame
-    self.df = pd.DataFrame.from_dict(self.count_words_extracted, orient='index')
-    self.df = self.df.sort_values([0], ascending = (False))
-    self.df = self.df.reset_index()
-    self.df.columns=["Words", "Repetition"]
-    # Export to csv file
-    self.filename
-    self.df.to_csv(os.path.join( r"D:\Taxation", r"count_words.csv" ))
+            counts[word] = 1
+    #From Dictionary to dataframe 
+    df = pd.DataFrame.from_dict(counts, orient='index')
+    df = df.sort_values([0], ascending = (False))
+    df = df.reset_index()
+    df.columns=["Words", "Repetition"]
+    # Return A Data Frame which contain a ranking
+    return df
+
+
+Text_words = Count_Words(file_path)
+
+## Export to CSV
+Text_words.to_csv( "Folder_OutPut\conteo_palabras.csv", encoding= "latin-1" )   
